@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CropGuard AI — Smart Crop Disease Detection</title>
+  <meta name="description" content="Advanced AI-powered crop disease diagnosis system using deep learning and environmental data for sustainable agriculture." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
+</head>
+<body>
+
+  <!-- ===== NAVIGATION ===== -->
+  <nav class="nav" id="main-nav">
+    <div class="nav__inner">
+      <a href="#" class="nav__brand">
+        <div class="nav__logo">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8 2 4 6 4 10c0 2 1 4 2 5.5C7 17 9 22 12 22s5-5 6-6.5C19 14 20 12 20 10c0-4-4-8-8-8z"/><path d="M12 2v20" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M12 8c-2 0-4 2-4 4" fill="none" stroke="#fff" stroke-width="1.2"/><path d="M12 12c2 0 4-2 4-4" fill="none" stroke="#fff" stroke-width="1.2"/></svg>
+        </div>
+        <span class="nav__title">CropGuard AI</span>
+      </a>
+
+      <ul class="nav__links" id="nav-links">
+        <li><a href="#features" class="nav__link">Features</a></li>
+        <li><a href="#diagnosis" class="nav__link">Diagnosis</a></li>
+        <li><a href="#environment" class="nav__link">Environment</a></li>
+        <li><a href="#how-it-works" class="nav__link">How It Works</a></li>
+        <li><a href="#tech" class="nav__link">Technology</a></li>
+        <li><a href="#diagnosis" class="nav__link nav__cta">Diagnose Now</a></li>
+      </ul>
+
+      <button class="nav__toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="hero">
+    <div class="hero__bg">
+      <img src="assets/images/hero-bg.png" alt="Lush green crop field at golden hour" />
+    </div>
+    <div class="hero__overlay"></div>
+
+    <div class="container hero__content">
+      <div class="hero__badge">
+        <span class="dot"></span>
+        AI-Powered Crop Protection
+      </div>
+
+      <h1 class="hero__heading">
+        Smart Crop Disease<br /><span class="highlight">Detection Using AI</span>
+      </h1>
+
+      <p class="hero__desc">
+        Combining deep learning image analysis with environmental data to detect crop diseases early, predict future risks, and recommend sustainable treatments — bringing expert-level diagnostics to every farmer.
+      </p>
+
+      <div class="hero__actions">
+        <a href="#diagnosis" class="btn btn--primary" id="hero-cta-diagnose">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Diagnose Crop
+        </a>
+        <a href="#features" class="btn btn--outline" id="hero-cta-explore">
+          Explore Features →
+        </a>
+      </div>
+
+      <div class="hero__stats">
+        <div class="hero__stat">
+          <div class="hero__stat-value">38+</div>
+          <div class="hero__stat-label">Disease Classes</div>
+        </div>
+        <div class="hero__stat">
+          <div class="hero__stat-value">99.5%</div>
+          <div class="hero__stat-label">Detection Accuracy</div>
+        </div>
+        <div class="hero__stat">
+          <div class="hero__stat-value">14</div>
+          <div class="hero__stat-label">Crop Species</div>
+        </div>
+        <div class="hero__stat">
+          <div class="hero__stat-value">&lt;2s</div>
+          <div class="hero__stat-label">Inference Time</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES (CSSA-style grid) ===== -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="features__header fade-up">
+        <p class="section-label">Core Capabilities</p>
+        <h2 class="section-heading">Powerful Features for Modern Agriculture</h2>
+        <p class="section-subtext">Our multimodal AI system analyses leaf images alongside environmental data to deliver accurate diagnosis, explainable insights, and actionable treatment plans.</p>
+      </div>
+
+      <div class="features__grid stagger">
+        <!-- Card 1 -->
+        <div class="feature-card fade-up" id="feature-diagnosis">
+          <div class="feature-card__bg">
+            <img src="assets/images/card-diagnosis.png" alt="Leaf inspection" />
+          </div>
+          <div class="feature-card__body">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <h3 class="feature-card__title">Disease Diagnosis</h3>
+            <p class="feature-card__text">Upload or capture a leaf image and our CNN / Vision Transformer model identifies the disease in under 2 seconds with 99%+ accuracy.</p>
+            <a href="#diagnosis" class="feature-card__link">Try Diagnosis →</a>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="feature-card fade-up" id="feature-heatmap">
+          <div class="feature-card__bg">
+            <img src="assets/images/card-disease.png" alt="Diseased leaf" />
+          </div>
+          <div class="feature-card__body">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </div>
+            <h3 class="feature-card__title">Explainable Heatmaps</h3>
+            <p class="feature-card__text">Grad-CAM visualizations highlight exactly which parts of the leaf the AI focuses on — building trust through transparency.</p>
+            <a href="#diagnosis" class="feature-card__link">Learn More →</a>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="feature-card fade-up" id="feature-environment">
+          <div class="feature-card__bg">
+            <img src="assets/images/card-environment.png" alt="Weather sensors in field" />
+          </div>
+          <div class="feature-card__body">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg>
+            </div>
+            <h3 class="feature-card__title">Environmental Analysis</h3>
+            <p class="feature-card__text">Integrates temperature, humidity and rainfall data alongside visual data for a multimodal, context-aware diagnosis.</p>
+            <a href="#environment" class="feature-card__link">View Data →</a>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="feature-card fade-up" id="feature-forecast">
+          <div class="feature-card__bg">
+            <img src="assets/images/card-analytics.png" alt="Aerial crop rows" />
+          </div>
+          <div class="feature-card__body">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <h3 class="feature-card__title">Risk Forecasting</h3>
+            <p class="feature-card__text">Time-series models predict future disease outbreaks using historical weather patterns and cropping calendars.</p>
+            <a href="#environment" class="feature-card__link">Forecast →</a>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="feature-card fade-up" id="feature-edge">
+          <div class="feature-card__bg">
+            <img src="assets/images/card-edge-ai.png" alt="Mobile scanning" />
+          </div>
+          <div class="feature-card__body">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </div>
+            <h3 class="feature-card__title">Edge AI & Mobile</h3>
+            <p class="feature-card__text">Quantized models run offline on smartphones and IoT edge devices — bringing diagnostics to areas without internet.</p>
+            <a href="#tech" class="feature-card__link">Technology →</a>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="feature-card fade-up" id="feature-research">
+          <div class="feature-card__bg">
+            <img src="assets/images/card-research.png" alt="AI research lab" />
+          </div>
+          <div class="feature-card__body">
+            <div class="feature-card__icon">
+              <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+            </div>
+            <h3 class="feature-card__title">Research-Backed</h3>
+            <p class="feature-card__text">Built on state-of-the-art architectures — ResNet, DenseNet, EfficientNet, Vision Transformers — validated on PlantVillage & PlantDoc.</p>
+            <a href="#tech" class="feature-card__link">Read Paper →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DIAGNOSIS SECTION ===== -->
+  <section class="diagnosis" id="diagnosis">
+    <div class="container">
+      <div class="features__header fade-up" style="margin-bottom:56px;">
+        <p class="section-label">AI Diagnosis</p>
+        <h2 class="section-heading">Upload a Leaf — Get Instant Results</h2>
+        <p class="section-subtext">Our multimodal deep learning pipeline analyses your crop image, generates an explainable heatmap, and delivers treatment recommendations.</p>
+      </div>
+
+      <div class="diagnosis__grid">
+        <!-- Left: Upload -->
+        <div class="fade-up">
+          <div class="upload-zone" id="upload-zone">
+            <div class="upload-zone__icon">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <p class="upload-zone__title">Drag & Drop your leaf image</p>
+            <p class="upload-zone__text">or <span>click to browse</span> — JPG, PNG up to 10 MB</p>
+            <input type="file" id="file-input" accept="image/*" />
+          </div>
+
+          <div class="preview-area" id="preview-area">
+            <img id="preview-img" src="" alt="Uploaded crop leaf preview" />
+            <div class="scan-overlay" id="scan-overlay">
+              <div class="scan-line"></div>
+              <div class="scan-corners"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Results -->
+        <div>
+          <div class="results-panel" id="results-panel">
+            <div class="results-panel__header">
+              <div class="results-panel__status" id="results-status"></div>
+              <span class="results-panel__title" id="results-title">Awaiting image…</span>
+            </div>
+            <div class="results-panel__body" id="results-body">
+              <div style="text-align:center; padding:40px 0; color:var(--clr-text-light);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:.4;"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Upload a leaf image to start the AI diagnosis pipeline. The model will classify the disease and generate an explainable Grad-CAM heatmap.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ENVIRONMENT SECTION ===== -->
+  <section class="environment" id="environment">
+    <div class="container">
+      <div class="features__header fade-up" style="margin-bottom:56px;">
+        <p class="section-label">Environmental Data</p>
+        <h2 class="section-heading">Multimodal Risk Intelligence</h2>
+        <p class="section-subtext">Feed environmental inputs alongside images. Our time-series model uses weather history and crop calendars to forecast outbreak risks.</p>
+      </div>
+
+      <div class="environment__grid">
+        <!-- Left: Form -->
+        <div class="fade-up">
+          <form class="env-form" id="env-form">
+            <div class="form-group">
+              <label for="crop-type">Crop Species</label>
+              <select id="crop-type">
+                <option value="">Select crop…</option>
+                <option>Apple</option>
+                <option>Corn (Maize)</option>
+                <option>Grape</option>
+                <option>Potato</option>
+                <option>Rice (Paddy)</option>
+                <option>Tomato</option>
+                <option>Wheat</option>
+                <option>Cassava</option>
+                <option>Strawberry</option>
+                <option>Soybean</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="temperature">Temperature (°C)</label>
+                <input type="number" id="temperature" placeholder="e.g. 28" />
+              </div>
+              <div class="form-group">
+                <label for="humidity">Humidity (%)</label>
+                <input type="number" id="humidity" placeholder="e.g. 72" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="rainfall">Rainfall (mm/week)</label>
+                <input type="number" id="rainfall" placeholder="e.g. 45" />
+              </div>
+              <div class="form-group">
+                <label for="soil-ph">Soil pH</label>
+                <input type="number" step="0.1" id="soil-ph" placeholder="e.g. 6.5" />
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn--primary" id="predict-risk-btn" style="width:100%;justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Predict Risk
+            </button>
+          </form>
+        </div>
+
+        <!-- Right: Weather Gauges -->
+        <div class="fade-up">
+          <div class="weather-gauges" id="weather-gauges">
+            <div class="gauge-card">
+              <div class="gauge-card__icon">🌡️</div>
+              <div class="gauge-card__value" id="gauge-temp">--°C</div>
+              <div class="gauge-card__label">Temperature</div>
+              <span class="gauge-card__status normal" id="gauge-temp-status">Normal</span>
+            </div>
+            <div class="gauge-card">
+              <div class="gauge-card__icon">💧</div>
+              <div class="gauge-card__value" id="gauge-humidity">--%</div>
+              <div class="gauge-card__label">Humidity</div>
+              <span class="gauge-card__status normal" id="gauge-humidity-status">Normal</span>
+            </div>
+            <div class="gauge-card">
+              <div class="gauge-card__icon">🌧️</div>
+              <div class="gauge-card__value" id="gauge-rain">--mm</div>
+              <div class="gauge-card__label">Rainfall / Week</div>
+              <span class="gauge-card__status normal" id="gauge-rain-status">Normal</span>
+            </div>
+            <div class="gauge-card">
+              <div class="gauge-card__icon">⚠️</div>
+              <div class="gauge-card__value" id="gauge-risk">--</div>
+              <div class="gauge-card__label">Risk Level</div>
+              <span class="gauge-card__status normal" id="gauge-risk-status">Low</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="how-it-works__header fade-up">
+        <p class="section-label">Pipeline</p>
+        <h2 class="section-heading">How It Works</h2>
+        <p class="section-subtext">From leaf photograph to actionable treatment — our four-stage AI pipeline processes everything in real-time.</p>
+      </div>
+
+      <div class="steps stagger">
+        <div class="step fade-up">
+          <div class="step__number">1</div>
+          <h3 class="step__title">Capture Image</h3>
+          <p class="step__text">Take or upload a photo of the affected crop leaf using your smartphone or IoT camera.</p>
+        </div>
+        <div class="step fade-up">
+          <div class="step__number">2</div>
+          <h3 class="step__title">AI Classification</h3>
+          <p class="step__text">A CNN / Vision Transformer model analyses the image, classifying the disease with 99%+ accuracy.</p>
+        </div>
+        <div class="step fade-up">
+          <div class="step__number">3</div>
+          <h3 class="step__title">Heatmap & Context</h3>
+          <p class="step__text">Grad-CAM heatmaps show the focal regions while environmental data adds multimodal context.</p>
+        </div>
+        <div class="step fade-up">
+          <div class="step__number">4</div>
+          <h3 class="step__title">Treatment Plan</h3>
+          <p class="step__text">Receive sustainable treatment recommendations and future risk forecasts to protect your yield.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TECHNOLOGY STACK ===== -->
+  <section class="tech-section" id="tech">
+    <div class="container">
+      <div class="tech-section__header fade-up">
+        <p class="section-label">Technology</p>
+        <h2 class="section-heading">State-of-the-Art Architectures</h2>
+        <p class="section-subtext">Our system is built on research-validated deep learning models and optimized for deployment on edge devices.</p>
+      </div>
+
+      <div class="tech-cards stagger">
+        <div class="tech-card fade-up">
+          <div class="tech-card__icon">🧠</div>
+          <h3 class="tech-card__name">ResNet-50</h3>
+          <p class="tech-card__desc">Skip connections enable deep gradient flow. Benchmark: 98%+ on PlantVillage dataset.</p>
+        </div>
+        <div class="tech-card fade-up">
+          <div class="tech-card__icon">🔬</div>
+          <h3 class="tech-card__name">DenseNet-121</h3>
+          <p class="tech-card__desc">Dense feature reuse with 8M params. Achieved 99.81% on fine-grained disease variants.</p>
+        </div>
+        <div class="tech-card fade-up">
+          <div class="tech-card__icon">⚡</div>
+          <h3 class="tech-card__name">EfficientNet-B3</h3>
+          <p class="tech-card__desc">Compound scaling for optimal size-accuracy trade-off. Excels on PlantDoc field data.</p>
+        </div>
+        <div class="tech-card fade-up">
+          <div class="tech-card__icon">👁️</div>
+          <h3 class="tech-card__name">Vision Transformer</h3>
+          <p class="tech-card__desc">Self-attention over image patches for global context. ViT-30 at 98.41% on Rice Leaf data.</p>
+        </div>
+        <div class="tech-card fade-up">
+          <div class="tech-card__icon">📱</div>
+          <h3 class="tech-card__name">MobileNetV3</h3>
+          <p class="tech-card__desc">Quantized to 0.93M params with ~99.5% accuracy. Runs on-device with TFLite.</p>
+        </div>
+        <div class="tech-card fade-up">
+          <div class="tech-card__icon">🔒</div>
+          <h3 class="tech-card__name">Federated Learning</h3>
+          <p class="tech-card__desc">Privacy-preserving distributed training. 93.5% accuracy without sharing raw farm data.</p>
+        </div>
+        <div class="tech-card fade-up">
+          <div class="tech-card__icon">🎨</div>
+          <h3 class="tech-card__name">GANs / CycleGAN</h3>
+          <p class="tech-card__desc">Synthetic data generation to balance rare disease classes and bridge the lab-to-field gap.</p>
+        </div>
+        <div class="tech-card fade-up">
+          <div class="tech-card__icon">💬</div>
+          <h3 class="tech-card__name">Multimodal LLMs</h3>
+          <p class="tech-card__desc">GPT-4o and CLIP for explainable diagnoses up to 98.12% accuracy with natural language.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div>
+          <div class="nav__brand" style="margin-bottom:4px;">
+            <div class="nav__logo">
+              <svg viewBox="0 0 24 24"><path d="M12 2C8 2 4 6 4 10c0 2 1 4 2 5.5C7 17 9 22 12 22s5-5 6-6.5C19 14 20 12 20 10c0-4-4-8-8-8z" fill="#fff"/></svg>
+            </div>
+            <span class="nav__title" style="color:#fff;">CropGuard AI</span>
+          </div>
+          <p class="footer__brand-desc">
+            Dedicated to discovering and applying AI-powered plant science solutions to improve crop yields, protect farmer livelihoods, and promote sustainable agriculture worldwide.
+          </p>
+        </div>
+        <div>
+          <h4 class="footer__heading">Platform</h4>
+          <a href="#diagnosis" class="footer__link">Disease Diagnosis</a>
+          <a href="#environment" class="footer__link">Risk Forecast</a>
+          <a href="#features" class="footer__link">Features</a>
+          <a href="#tech" class="footer__link">Technology</a>
+        </div>
+        <div>
+          <h4 class="footer__heading">Research</h4>
+          <a href="#" class="footer__link">PlantVillage Dataset</a>
+          <a href="#" class="footer__link">PlantDoc Benchmark</a>
+          <a href="#" class="footer__link">Publications</a>
+          <a href="#" class="footer__link">Model Zoo</a>
+        </div>
+        <div>
+          <h4 class="footer__heading">About</h4>
+          <a href="#" class="footer__link">Research Team</a>
+          <a href="#" class="footer__link">LPU CSE</a>
+          <a href="#" class="footer__link">Contact</a>
+          <a href="#" class="footer__link">Open Source</a>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        © 2026 CropGuard AI — Lovely Professional University. Built for sustainable agriculture.
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
