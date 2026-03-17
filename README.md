@@ -103,7 +103,7 @@ Federated Learning framework enables collaborative model training without sharin
 | PlantWild | Large-scale | — | Extreme field conditions |
 
 ### Frontend
-- **HTML5** + **Vanilla CSS** + **JavaScript**
+- **HTML5** + **Vanilla CSS** + **JavaScript** + **TensorFlow.js**
 - Responsive design with mobile-first approach
 - Frosted glass card UI inspired by CSSA (Crop Science Society of America)
 - Micro-animations: scroll fade-up, scan line effect, counter animations
@@ -137,6 +137,17 @@ python -m http.server 8080
 1. Go to [app.netlify.com/drop](https://app.netlify.com/drop)
 2. Drag and drop the project folder
 3. Get a live URL instantly!
+
+
+### TensorFlow.js Model Setup
+
+The UI now runs real inference through TensorFlow.js and looks for model files at `model/model.json`.
+
+1. Train/export your model in TensorFlow.js format.
+2. Copy `model.json` and all shard `.bin` files into `model/`.
+3. Serve the app (`python -m http.server 8080`) and upload a leaf image.
+
+If model files are missing, the app shows a fallback message instead of fake random predictions.
 
 ---
 
@@ -212,7 +223,7 @@ See [PRODUCTION_ROADMAP.md](PRODUCTION_ROADMAP.md) for the full plan. Key milest
 - [x] Environmental data input and risk gauges
 - [x] Responsive mobile layout
 - [x] Deployed to Netlify
-- [ ] Real TensorFlow.js model integration
+- [x] TensorFlow.js inference pipeline integrated (drop-in model artifacts required)
 - [ ] Treatment database (38 diseases)
 - [ ] Camera capture for mobile
 - [ ] PWA offline support

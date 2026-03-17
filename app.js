@@ -83,63 +83,102 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsPanel.classList.add('visible');
 
             // Simulate AI processing time
-            setTimeout(() => {
+            setTimeout(async () => {
                 scanOverlay.classList.remove('active');
-                showMockResults();
+                const disease = await predictDisease(previewImg);
+                renderResults(disease);
             }, 3000);
         };
         reader.readAsDataURL(file);
     }
 
-    // ──── MOCK DIAGNOSIS RESULTS ───────────────────────
-    const diseases = [
-        {
-            name: 'Tomato — Late Blight',
-            confidence: 96.8,
-            severity: 'Moderate',
-            severityClass: 'warning',
-            treatment: 'Apply copper-based fungicide (2g/L) immediately. Remove affected leaves and improve air circulation by pruning. Avoid overhead irrigation. Monitor neighbouring plants for spread over the next 7 days.'
-        },
-        {
-            name: 'Potato — Early Blight',
-            confidence: 94.2,
-            severity: 'High',
-            severityClass: 'danger',
-            treatment: 'Apply chlorothalonil or mancozeb-based fungicide. Remove and destroy severely infected leaves. Ensure proper spacing between plants. Apply preventive sprays every 7–10 days during wet seasons.'
-        },
-        {
-            name: 'Apple — Cedar Apple Rust',
-            confidence: 97.5,
-            severity: 'Mild',
-            severityClass: 'success',
-            treatment: 'Apply myclobutanil-based fungicide at petal fall. Remove nearby cedar/juniper trees if possible. Monitor for lesion development and reapply fungicide in 14 days as needed.'
-        },
-        {
-            name: 'Grape — Black Rot',
-            confidence: 93.1,
-            severity: 'High',
-            severityClass: 'danger',
-            treatment: 'Apply captan or myclobutanil at bloom stage. Remove mummified fruit and infected debris. Ensure good canopy management for air circulation. Spray preventively throughout the growing season.'
-        },
-        {
-            name: 'Corn — Northern Leaf Blight',
-            confidence: 91.6,
-            severity: 'Moderate',
-            severityClass: 'warning',
-            treatment: 'Apply propiconazole or azoxystrobin fungicide. Use resistant hybrids where available. Practice crop rotation with non-host crops to reduce soil inoculum levels.'
-        },
-        {
-            name: 'Rice — Bacterial Leaf Blight',
-            confidence: 95.3,
-            severity: 'High',
-            severityClass: 'danger',
-            treatment: 'Drain fields and reduce nitrogen fertilizer. Apply streptomycin sulfate or copper hydroxide. Plant resistant varieties (e.g., IR64). Maintain balanced fertilization to reduce susceptibility.'
-        }
+    // ──── TENSORFLOW.JS DIAGNOSIS ─────────────────────
+    const CLASS_NAMES = [
+        'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
+        'Blueberry___healthy', 'Cherry___Powdery_mildew', 'Cherry___healthy', 'Corn___Cercospora_leaf_spot',
+        'Corn___Common_rust', 'Corn___Northern_Leaf_Blight', 'Corn___healthy', 'Grape___Black_rot',
+        'Grape___Esca', 'Grape___Leaf_blight', 'Grape___healthy', 'Orange___Haunglongbing',
+        'Peach___Bacterial_spot', 'Peach___healthy', 'Pepper___Bacterial_spot', 'Pepper___healthy',
+        'Potato___Early_blight', 'Potato___Late_blight', 'Potato___healthy', 'Raspberry___healthy',
+        'Soybean___healthy', 'Squash___Powdery_mildew', 'Strawberry___Leaf_scorch', 'Strawberry___healthy',
+        'Tomato___Bacterial_spot', 'Tomato___Early_blight', 'Tomato___Late_blight', 'Tomato___Leaf_Mold',
+        'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites', 'Tomato___Target_Spot',
+        'Tomato___Yellow_Leaf_Curl_Virus', 'Tomato___Mosaic_virus', 'Tomato___healthy'
     ];
 
-    function showMockResults() {
-        const disease = diseases[Math.floor(Math.random() * diseases.length)];
+    const TREATMENT_FALLBACK = {
+        default: 'Apply integrated disease management: isolate affected plants, improve airflow, avoid overhead irrigation, and use a crop-specific fungicide or bactericide based on local agricultural extension guidance.'
+    };
 
+    let diseaseModel = null;
+    let modelLoadError = null;
+
+    async function loadDiseaseModel() {
+        if (typeof tf === 'undefined') {
+            modelLoadError = 'TensorFlow.js not found. Ensure the CDN script is loaded.';
+            return;
+        }
+
+        try {
+            diseaseModel = await tf.loadLayersModel('model/model.json');
+            console.info('✅ TensorFlow model loaded.');
+        } catch (error) {
+            modelLoadError = 'Model not found at /model/model.json. Add exported TensorFlow.js model files.';
+            console.warn('⚠️ Falling back to demo predictions:', error);
+        }
+    }
+
+    function formatLabel(rawLabel) {
+        return rawLabel.replace('___', ' — ').replaceAll('_', ' ');
+    }
+
+    function classifySeverity(confidence, isHealthy) {
+        if (isHealthy) return { severity: 'Healthy', severityClass: 'success' };
+        if (confidence >= 90) return { severity: 'High', severityClass: 'danger' };
+        if (confidence >= 75) return { severity: 'Moderate', severityClass: 'warning' };
+        return { severity: 'Mild', severityClass: 'success' };
+    }
+
+    async function predictDisease(imageElement) {
+        if (!diseaseModel || typeof tf === 'undefined') {
+            return {
+                disease: 'Demo Mode — Upload TensorFlow model to enable diagnosis',
+                confidence: 0,
+                severity: 'Unknown',
+                severityClass: 'warning',
+                treatment: 'Place TensorFlow.js model artifacts in /model and re-run diagnosis.'
+            };
+        }
+
+        const inputTensor = tf.tidy(() => tf.browser.fromPixels(imageElement)
+            .resizeBilinear([224, 224])
+            .toFloat()
+            .div(255)
+            .expandDims(0));
+
+        const predictionTensor = diseaseModel.predict(inputTensor);
+        const probabilities = await predictionTensor.data();
+
+        inputTensor.dispose();
+        predictionTensor.dispose();
+
+        const topIndex = probabilities.indexOf(Math.max(...probabilities));
+        const confidence = Number((probabilities[topIndex] * 100).toFixed(1));
+        const rawClass = CLASS_NAMES[topIndex] || 'Unknown___class';
+        const disease = formatLabel(rawClass);
+        const isHealthy = rawClass.includes('healthy');
+        const severityInfo = classifySeverity(confidence, isHealthy);
+
+        return {
+            disease,
+            confidence,
+            severity: severityInfo.severity,
+            severityClass: severityInfo.severityClass,
+            treatment: TREATMENT_FALLBACK[rawClass] || TREATMENT_FALLBACK.default
+        };
+    }
+
+    function renderResults(disease) {
         document.getElementById('results-title').textContent = 'Diagnosis Complete';
         document.getElementById('results-status').style.background = 'var(--clr-success)';
 
@@ -147,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body.innerHTML = `
       <div class="result-item">
         <span class="result-item__label">Disease Detected</span>
-        <span class="result-item__value">${disease.name}</span>
+        <span class="result-item__value">${disease.disease}</span>
       </div>
       <div class="result-item">
         <span class="result-item__label">Severity</span>
@@ -155,11 +194,11 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="result-item">
         <span class="result-item__label">Model Used</span>
-        <span class="result-item__value">EfficientNet-B3 + ViT</span>
+        <span class="result-item__value">TensorFlow.js (PlantVillage classes)</span>
       </div>
       <div class="result-item">
-        <span class="result-item__label">Dataset</span>
-        <span class="result-item__value">PlantVillage / PlantDoc</span>
+        <span class="result-item__label">Model Status</span>
+        <span class="result-item__value">${diseaseModel ? 'Loaded' : 'Fallback mode'}</span>
       </div>
 
       <div class="confidence-bar">
@@ -179,15 +218,17 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <p class="treatment-box__text">${disease.treatment}</p>
       </div>
+      ${modelLoadError ? `<p style="margin-top:12px;color:var(--clr-warning);font-size:.9rem;">${modelLoadError}</p>` : ''}
     `;
 
-        // Animate confidence bar
         requestAnimationFrame(() => {
             setTimeout(() => {
                 document.getElementById('conf-fill').style.width = disease.confidence + '%';
             }, 100);
         });
     }
+
+    loadDiseaseModel();
 
     // ──── RESET UPLOAD (click on preview to re-upload) ──
     previewArea.addEventListener('click', () => {
