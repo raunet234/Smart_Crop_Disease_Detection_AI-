@@ -1,7 +1,33 @@
+# Dependencies
 node_modules/
-extracted.txt
-extract.py
+
+# Sensitive files
+.env
+.env.*
+*.key
+
+# Python
 *.pyc
 __pycache__/
+
+# Debug/temp files
+fix_output*.txt
+model_debug.txt
+model_inspect.txt
+patch_output.txt
+verify_fix.txt
+weight_debug.txt
+extracted.txt
+extract.py
+
+# TFjs model (large binary files — not needed for backend)
+model/tfjs_model/
+
+# Utility scripts (not part of the app)
+inspect.js
+patch_model.js
+
+# OS files
 .DS_Store
 Thumbs.db
+desktop.ini

@@ -1,5 +1,7 @@
 /* ============================================
    CropGuard AI — Application Logic
+   Backend-Powered AI Diagnosis (no API keys exposed)
+   15 PlantVillage Disease Classes
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -64,12 +66,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (fileInput.files.length) handleFile(fileInput.files[0]);
     });
 
+    // Store the current image as base64 for API calls
+    let currentImageBase64 = null;
+
     function handleFile(file) {
         if (!file.type.startsWith('image/')) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
             previewImg.src = e.target.result;
+            // Store base64 data (strip the data:image/...;base64, prefix)
+            currentImageBase64 = e.target.result.split(',')[1];
             previewArea.classList.add('active');
             uploadZone.style.display = 'none';
 
@@ -82,49 +89,112 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show results panel
             resultsPanel.classList.add('visible');
 
-            // Simulate AI processing time
+            // Run AI processing
             setTimeout(async () => {
                 scanOverlay.classList.remove('active');
-                const disease = await predictDisease(previewImg);
+                const disease = await predictDisease(currentImageBase64, file.type);
                 renderResults(disease);
-            }, 3000);
+            }, 1500);
         };
         reader.readAsDataURL(file);
     }
 
-    // ──── TENSORFLOW.JS DIAGNOSIS ─────────────────────
+    // ──── SUPPORTED DISEASE CLASSES ─────────────────────
     const CLASS_NAMES = [
-        'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust', 'Apple___healthy',
-        'Blueberry___healthy', 'Cherry___Powdery_mildew', 'Cherry___healthy', 'Corn___Cercospora_leaf_spot',
-        'Corn___Common_rust', 'Corn___Northern_Leaf_Blight', 'Corn___healthy', 'Grape___Black_rot',
-        'Grape___Esca', 'Grape___Leaf_blight', 'Grape___healthy', 'Orange___Haunglongbing',
-        'Peach___Bacterial_spot', 'Peach___healthy', 'Pepper___Bacterial_spot', 'Pepper___healthy',
-        'Potato___Early_blight', 'Potato___Late_blight', 'Potato___healthy', 'Raspberry___healthy',
-        'Soybean___healthy', 'Squash___Powdery_mildew', 'Strawberry___Leaf_scorch', 'Strawberry___healthy',
-        'Tomato___Bacterial_spot', 'Tomato___Early_blight', 'Tomato___Late_blight', 'Tomato___Leaf_Mold',
-        'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites', 'Tomato___Target_Spot',
-        'Tomato___Yellow_Leaf_Curl_Virus', 'Tomato___Mosaic_virus', 'Tomato___healthy'
+        'Corn___Cercospora_leaf_spot', 'Corn___Common_rust',
+        'Corn___Northern_Leaf_Blight', 'Corn___healthy',
+        'Potato___Early_blight', 'Potato___Late_blight', 'Potato___healthy',
+        'Rice___Brown_spot', 'Rice___Hispa', 'Rice___Leaf_blast', 'Rice___healthy',
+        'Tomato___Bacterial_spot', 'Tomato___Early_blight',
+        'Tomato___Late_blight', 'Tomato___healthy'
     ];
 
-    const TREATMENT_FALLBACK = {
-        default: 'Apply integrated disease management: isolate affected plants, improve airflow, avoid overhead irrigation, and use a crop-specific fungicide or bactericide based on local agricultural extension guidance.'
+    // ──── TREATMENT DATABASE ──────────────────────────
+    const TREATMENTS = {
+        'Corn___Cercospora_leaf_spot': {
+            treatment: 'Apply fungicides containing azoxystrobin or pyraclostrobin at first sign of grey leaf spot. Rotate crops annually and till crop debris. Choose resistant hybrids where available.',
+            prevention: 'Ensure proper plant spacing for airflow. Avoid excessive nitrogen fertilisation. Scout fields regularly from VT through R3 growth stages.'
+        },
+        'Corn___Common_rust': {
+            treatment: 'Apply foliar fungicides (triazole or strobilurin-based) when pustules appear on lower leaves before tasseling. Use resistant corn varieties for long-term control.',
+            prevention: 'Plant rust-resistant hybrids. Monitor fields when temperatures are 16–23°C with high humidity. Early planting can help avoid peak rust pressure.'
+        },
+        'Corn___Northern_Leaf_Blight': {
+            treatment: 'Apply fungicide (propiconazole or azoxystrobin) at VT-R1 stage when lower leaf lesions appear. Remove and destroy infected crop debris post-harvest.',
+            prevention: 'Use NCLB-resistant hybrids. Practise 2–3 year crop rotation away from corn. Ensure good field drainage and reduce leaf wetness duration.'
+        },
+        'Corn___healthy': {
+            treatment: 'No treatment needed — your corn plant is healthy! Continue regular monitoring and maintain good agronomic practices.',
+            prevention: 'Maintain balanced fertilisation, proper irrigation, and scout fields weekly for early detection of any emerging issues.'
+        },
+        'Potato___Early_blight': {
+            treatment: 'Apply chlorothalonil or mancozeb fungicide sprays at 7–10 day intervals beginning when symptoms appear. Remove heavily infected lower leaves.',
+            prevention: 'Use certified disease-free seed potatoes. Ensure adequate plant nutrition (especially potassium). Practise 3-year crop rotation and destroy volunteer plants.'
+        },
+        'Potato___Late_blight': {
+            treatment: 'Apply systemic fungicides (metalaxyl/mefenoxam or cymoxanil) immediately upon detection. Destroy all infected plant material. This disease can devastate entire fields within days.',
+            prevention: 'Plant Late blight-resistant varieties. Avoid overhead irrigation. Monitor weather forecasts for blight-favourable conditions (cool, wet). Eliminate cull piles.'
+        },
+        'Potato___healthy': {
+            treatment: 'No treatment needed — your potato plant is healthy! Continue monitoring for pests and maintaining proper soil moisture.',
+            prevention: 'Maintain proper hilling, balanced fertilisation, and regular scouting. Ensure good drainage to prevent waterlogging.'
+        },
+        'Rice___Brown_spot': {
+            treatment: 'Apply fungicides such as propiconazole or tricyclazole at booting and heading stages. Improve soil fertility, especially silicon and potassium supplementation.',
+            prevention: 'Use disease-free certified seeds. Apply balanced NPK + silicon fertilisers. Maintain proper water management and avoid drought stress.'
+        },
+        'Rice___Hispa': {
+            treatment: 'Apply recommended insecticides (chlorpyrifos or cartap hydrochloride) when 1–2 adults/hill are observed. Remove and destroy affected leaf tips. Use biological control with parasitoids.',
+            prevention: 'Avoid excessive nitrogen. Clip infested leaf tips during transplanting. Use early-maturing varieties and synchronised planting in the community.'
+        },
+        'Rice___Leaf_blast': {
+            treatment: 'Apply tricyclazole or isoprothiolane fungicide at first symptom. Drain fields temporarily to reduce humidity. Avoid applying excessive nitrogen.',
+            prevention: 'Plant blast-resistant varieties. Use balanced fertilisation (limit N to recommended levels). Ensure proper spacing and avoid water stress during the vegetative stage.'
+        },
+        'Rice___healthy': {
+            treatment: 'No treatment needed — your rice plant is healthy! Continue proper water and nutrient management for optimal yield.',
+            prevention: 'Follow recommended planting schedules, maintain standing water at appropriate depth, and scout for pest/disease weekly.'
+        },
+        'Tomato___Bacterial_spot': {
+            treatment: 'Apply copper-based bactericides mixed with mancozeb every 5–7 days. Remove and destroy severely infected plants. Avoid working in the field when plants are wet.',
+            prevention: 'Use pathogen-free certified seeds and transplants. Practise crop rotation (3+ years). Avoid overhead irrigation and use drip irrigation instead.'
+        },
+        'Tomato___Early_blight': {
+            treatment: 'Apply fungicide sprays (chlorothalonil, mancozeb, or azoxystrobin) at 7–10 day intervals. Remove infected lower leaves and ensure good air circulation.',
+            prevention: 'Mulch around plants to prevent soil splash. Stake or cage tomato plants. Use resistant varieties and practise 2–3 year rotation away from Solanaceae.'
+        },
+        'Tomato___Late_blight': {
+            treatment: 'Apply systemic fungicides (mefenoxam or cyazofamid) immediately. Remove and destroy all infected plant material. This disease spreads rapidly in cool, wet conditions.',
+            prevention: 'Plant resistant varieties. Avoid overhead watering. Ensure proper spacing for airflow. Monitor P. infestans forecasts and apply preventive fungicides during high-risk periods.'
+        },
+        'Tomato___healthy': {
+            treatment: 'No treatment needed — your tomato plant is healthy! Continue regular care with proper watering, staking, and fertiliser application.',
+            prevention: 'Maintain consistent watering (avoid extremes), apply mulch, prune suckers for airflow, and scout plants twice weekly for early signs of issues.'
+        },
+        'default': {
+            treatment: 'Apply integrated disease management: isolate affected plants, improve airflow, avoid overhead irrigation, and use a crop-specific fungicide or bactericide based on local agricultural extension service guidelines.',
+            prevention: 'Practise crop rotation, use certified disease-free seeds, maintain balanced fertilisation, and scout fields regularly for early detection.'
+        }
     };
 
-    let diseaseModel = null;
-    let modelLoadError = null;
+    // ──── MODEL STATUS UI ──────────────────────────
+    function updateModelStatusUI(status) {
+        const badge = document.getElementById('model-status-badge');
+        if (!badge) return;
 
-    async function loadDiseaseModel() {
-        if (typeof tf === 'undefined') {
-            modelLoadError = 'TensorFlow.js not found. Ensure the CDN script is loaded.';
-            return;
-        }
-
-        try {
-            diseaseModel = await tf.loadLayersModel('model/model.json');
-            console.info('✅ TensorFlow model loaded.');
-        } catch (error) {
-            modelLoadError = 'Model not found at /model/model.json. Add exported TensorFlow.js model files.';
-            console.warn('⚠️ Falling back to demo predictions:', error);
+        switch (status) {
+            case 'loading':
+                badge.innerHTML = '<span class="dot dot--pulse"></span> Analysing with AI…';
+                badge.className = 'model-status-badge loading';
+                break;
+            case 'ready':
+                badge.innerHTML = '<span class="dot dot--live"></span> CropGuard AI Ready';
+                badge.className = 'model-status-badge ready';
+                break;
+            case 'error':
+                badge.innerHTML = '<span class="dot dot--error"></span> AI Service Unavailable';
+                badge.className = 'model-status-badge error';
+                break;
         }
     }
 
@@ -139,48 +209,88 @@ document.addEventListener('DOMContentLoaded', () => {
         return { severity: 'Mild', severityClass: 'success' };
     }
 
-    async function predictDisease(imageElement) {
-        if (!diseaseModel || typeof tf === 'undefined') {
+    // ──── BACKEND API CALL ──────────────────────────
+    async function predictDisease(imageBase64, mimeType) {
+        updateModelStatusUI('loading');
+        const startTime = performance.now();
+
+        try {
+            const response = await fetch('/api/diagnose', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image: imageBase64,
+                    mimeType: mimeType || 'image/jpeg'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.error) {
+                throw new Error(result.error);
+            }
+
+            const inferenceTime = (performance.now() - startTime).toFixed(0);
+            const rawClass = result.disease_class || 'Unknown___disease';
+            const disease = formatLabel(rawClass);
+            const isHealthy = rawClass.includes('healthy');
+            const severityInfo = classifySeverity(result.confidence, isHealthy);
+            const treatmentData = TREATMENTS[rawClass] || TREATMENTS.default;
+
+            updateModelStatusUI('ready');
+
             return {
-                disease: 'Demo Mode — Upload TensorFlow model to enable diagnosis',
+                disease,
+                confidence: result.confidence,
+                severity: severityInfo.severity,
+                severityClass: severityInfo.severityClass,
+                treatment: treatmentData.treatment,
+                prevention: treatmentData.prevention,
+                rawClass,
+                isHealthy,
+                modelUsed: 'CropGuard AI Engine',
+                inferenceTime,
+                analysis: result.analysis,
+                top3: (result.top3 || []).map(p => ({
+                    label: formatLabel(p.label),
+                    prob: Number(p.prob).toFixed(1)
+                }))
+            };
+
+        } catch (error) {
+            console.error('❌ Diagnosis error:', error);
+            updateModelStatusUI('error');
+
+            return {
+                disease: 'Analysis Error',
                 confidence: 0,
-                severity: 'Unknown',
+                severity: 'Error',
                 severityClass: 'warning',
-                treatment: 'Place TensorFlow.js model artifacts in /model and re-run diagnosis.'
+                treatment: `Error: ${error.message}. Please try again.`,
+                prevention: 'If this persists, the AI service may be temporarily busy. Wait a moment and retry.',
+                rawClass: '',
+                isHealthy: false,
+                modelUsed: 'CropGuard AI Engine',
+                analysis: error.message
             };
         }
-
-        const inputTensor = tf.tidy(() => tf.browser.fromPixels(imageElement)
-            .resizeBilinear([224, 224])
-            .toFloat()
-            .div(255)
-            .expandDims(0));
-
-        const predictionTensor = diseaseModel.predict(inputTensor);
-        const probabilities = await predictionTensor.data();
-
-        inputTensor.dispose();
-        predictionTensor.dispose();
-
-        const topIndex = probabilities.indexOf(Math.max(...probabilities));
-        const confidence = Number((probabilities[topIndex] * 100).toFixed(1));
-        const rawClass = CLASS_NAMES[topIndex] || 'Unknown___class';
-        const disease = formatLabel(rawClass);
-        const isHealthy = rawClass.includes('healthy');
-        const severityInfo = classifySeverity(confidence, isHealthy);
-
-        return {
-            disease,
-            confidence,
-            severity: severityInfo.severity,
-            severityClass: severityInfo.severityClass,
-            treatment: TREATMENT_FALLBACK[rawClass] || TREATMENT_FALLBACK.default
-        };
     }
 
+    // ──── RENDER RESULTS ──────────────────────────────
     function renderResults(disease) {
-        document.getElementById('results-title').textContent = 'Diagnosis Complete';
-        document.getElementById('results-status').style.background = 'var(--clr-success)';
+        const titleEl = document.getElementById('results-title');
+        const statusEl = document.getElementById('results-status');
+
+        if (disease.isHealthy) {
+            titleEl.textContent = '✅ Healthy Plant';
+            statusEl.style.background = 'var(--clr-success)';
+        } else if (disease.confidence === 0) {
+            titleEl.textContent = '⚠️ ' + disease.disease;
+            statusEl.style.background = 'var(--clr-warning)';
+        } else {
+            titleEl.textContent = '🔬 Diagnosis Complete';
+            statusEl.style.background = disease.severityClass === 'danger' ? 'var(--clr-danger, #ef4444)' : 'var(--clr-success)';
+        }
 
         const body = document.getElementById('results-body');
         body.innerHTML = `
@@ -190,16 +300,23 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="result-item">
         <span class="result-item__label">Severity</span>
-        <span class="result-item__value ${disease.severityClass}">${disease.severity}</span>
+        <span class="result-item__value badge--${disease.severityClass}">${disease.severity}</span>
       </div>
       <div class="result-item">
         <span class="result-item__label">Model Used</span>
-        <span class="result-item__value">TensorFlow.js (PlantVillage classes)</span>
+        <span class="result-item__value">${disease.modelUsed}</span>
       </div>
+      ${disease.inferenceTime ? `
       <div class="result-item">
-        <span class="result-item__label">Model Status</span>
-        <span class="result-item__value">${diseaseModel ? 'Loaded' : 'Fallback mode'}</span>
-      </div>
+        <span class="result-item__label">Response Time</span>
+        <span class="result-item__value">${disease.inferenceTime} ms</span>
+      </div>` : ''}
+
+      ${disease.analysis ? `
+      <div class="result-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+        <span class="result-item__label">AI Analysis</span>
+        <span class="result-item__value" style="font-size:.88rem;line-height:1.5;">${disease.analysis}</span>
+      </div>` : ''}
 
       <div class="confidence-bar">
         <div class="confidence-bar__label">
@@ -211,6 +328,17 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
+      ${disease.top3 && disease.top3.length ? `
+      <div class="top3-predictions">
+        <p class="top3-predictions__title">Top Predictions</p>
+        ${disease.top3.map((p, i) => `
+        <div class="top3-predictions__row">
+          <span class="top3-predictions__rank">${i + 1}</span>
+          <span class="top3-predictions__label">${p.label}</span>
+          <span class="top3-predictions__prob">${p.prob}%</span>
+        </div>`).join('')}
+      </div>` : ''}
+
       <div class="treatment-box">
         <div class="treatment-box__title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -218,17 +346,28 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <p class="treatment-box__text">${disease.treatment}</p>
       </div>
-      ${modelLoadError ? `<p style="margin-top:12px;color:var(--clr-warning);font-size:.9rem;">${modelLoadError}</p>` : ''}
+
+      ${disease.prevention ? `
+      <div class="treatment-box treatment-box--prevention">
+        <div class="treatment-box__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Prevention Tips
+        </div>
+        <p class="treatment-box__text">${disease.prevention}</p>
+      </div>` : ''}
     `;
 
         requestAnimationFrame(() => {
             setTimeout(() => {
-                document.getElementById('conf-fill').style.width = disease.confidence + '%';
+                const fill = document.getElementById('conf-fill');
+                if (fill) fill.style.width = disease.confidence + '%';
             }, 100);
         });
     }
 
-    loadDiseaseModel();
+    // ──── INITIALIZE ──────────────────────────────
+    updateModelStatusUI('ready');
+    console.info('✅ CropGuard AI ready — using backend AI server');
 
     // ──── RESET UPLOAD (click on preview to re-upload) ──
     previewArea.addEventListener('click', () => {
@@ -236,13 +375,14 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadZone.style.display = '';
         scanOverlay.classList.remove('active');
         fileInput.value = '';
+        currentImageBase64 = null;
 
         document.getElementById('results-title').textContent = 'Awaiting image…';
         document.getElementById('results-status').style.background = '';
         document.getElementById('results-body').innerHTML = `
       <div style="text-align:center; padding:40px 0; color:var(--clr-text-light);">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:.4;"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        Upload a leaf image to start the AI diagnosis pipeline. The model will classify the disease and generate an explainable Grad-CAM heatmap.
+        Upload a leaf image to start the AI diagnosis pipeline. The AI will classify the disease and provide treatment recommendations.
       </div>`;
         resultsPanel.classList.remove('visible');
     });
@@ -280,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (rainfall > 40) { rainStatus.textContent = 'Moderate'; rainStatus.className = 'gauge-card__status elevated'; }
         else { rainStatus.textContent = 'Light'; rainStatus.className = 'gauge-card__status normal'; }
 
-        // Risk calculation (mock algorithm)
+        // Risk calculation
         let riskScore = 0;
         if (temp > 25 && temp < 35) riskScore += 20;
         if (temp >= 35) riskScore += 35;
@@ -289,12 +429,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rainfall > 50) riskScore += 20;
         if (rainfall > 80) riskScore += 15;
 
-        // Clamp
+        if (crop === 'Rice (Paddy)' && humidity > 80) riskScore += 10;
+        if (crop === 'Potato' && temp > 20 && temp < 25 && humidity > 75) riskScore += 15;
+        if (crop === 'Tomato' && humidity > 80 && temp < 25) riskScore += 10;
+
         riskScore = Math.min(riskScore, 100);
 
         const riskEl = document.getElementById('gauge-risk');
         const riskStatus = document.getElementById('gauge-risk-status');
-
         riskEl.textContent = riskScore + '%';
 
         if (riskScore > 70) {
@@ -308,7 +450,6 @@ document.addEventListener('DOMContentLoaded', () => {
             riskStatus.className = 'gauge-card__status normal';
         }
 
-        // Button feedback
         const btn = document.getElementById('predict-risk-btn');
         const originalText = btn.innerHTML;
         btn.innerHTML = '✓ Risk Updated';
@@ -319,14 +460,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000);
     });
 
-    // ──── SMOOTH SCROLL FOR ANCHOR LINKS ───────────────
+    // ──── SMOOTH SCROLL ───────────────────────────────
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', e => {
             e.preventDefault();
             const target = document.querySelector(anchor.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     });
 
@@ -347,9 +486,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function animateStats() {
         const targets = [
-            { el: statValues[0], end: 38, suffix: '+', decimal: false },
+            { el: statValues[0], end: 15, suffix: '', decimal: false },
             { el: statValues[1], end: 99.5, suffix: '%', decimal: true },
-            { el: statValues[2], end: 14, suffix: '', decimal: false },
+            { el: statValues[2], end: 4, suffix: '', decimal: false },
         ];
 
         targets.forEach(({ el, end, suffix, decimal }) => {
@@ -364,8 +503,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.textContent = (decimal ? current.toFixed(1) : Math.round(current)) + suffix;
             }, 30);
         });
-
-        // The "<2s" stat stays static
     }
 
 });
