@@ -14,8 +14,13 @@ import time
 
 # ─── LOAD API KEY ─────────────────────────────────────────
 def load_api_key():
-    """Load API key from .env file or environment variable"""
-    # Try .env file first
+    """Load API key from environment variable or .env file (local dev)"""
+    # 1. Environment variable first (Railway / production)
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if key:
+        return key
+
+    # 2. .env file fallback (local development)
     env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
     if os.path.exists(env_path):
         with open(env_path, "r") as f:
@@ -26,15 +31,11 @@ def load_api_key():
                     if key:
                         return key
 
-    # Try environment variable
-    key = os.environ.get("GEMINI_API_KEY", "")
-    if key:
-        return key
-
     print("\n" + "=" * 55)
     print("  ❌ NO API KEY FOUND!")
     print("=" * 55)
-    print("  Create a .env file in this folder with:")
+    print("  On Railway: set GEMINI_API_KEY in Variables tab")
+    print("  Locally: create a .env file with:")
     print('  GEMINI_API_KEY=your_key_here')
     print()
     print("  Get a FREE key at:")
@@ -45,7 +46,8 @@ def load_api_key():
 
 API_KEY = load_api_key()
 GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-pro"]
-PORT = 8000
+# Railway injects PORT dynamically — fall back to 8000 for local dev
+PORT = int(os.environ.get("PORT", 8000))
 
 # ─── SYSTEM PROMPT ────────────────────────────────────────
 SYSTEM_PROMPT = """You are an expert agricultural plant pathologist. Look at this leaf image carefully and classify the disease.
