@@ -4,6 +4,11 @@
    15 PlantVillage Disease Classes
    ============================================ */
 
+// ──── API CONFIGURATION ────────────────────────────────
+// Replace this with your actual Railway deployment URL.
+// Example: "https://cropguard-api-production.up.railway.app"
+const API_BASE_URL = "https://YOUR-RAILWAY-API-URL";
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // ──── NAV SCROLL BEHAVIOUR ──────────────────────────
@@ -83,16 +88,22 @@ document.addEventListener('DOMContentLoaded', () => {
             // Start scanning animation
             scanOverlay.classList.add('active');
             resultsPanel.classList.remove('visible');
-            document.getElementById('results-title').textContent = 'Analysing leaf…';
+            document.getElementById('results-title').textContent = 'Analyzing…';
             document.getElementById('results-status').style.background = 'var(--clr-warning)';
 
-            // Show results panel
+            // Show results panel with loading state
             resultsPanel.classList.add('visible');
+            document.getElementById('results-body').innerHTML = `
+              <div style="text-align:center; padding:48px 0; color:var(--clr-text-light);">
+                <div class="loading-spinner" style="width:40px;height:40px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--clr-primary,#4ade80);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div>
+                <p style="font-size:.95rem;font-weight:500;">Analyzing your leaf image…</p>
+                <p style="font-size:.8rem;opacity:.6;margin-top:4px;">This may take a few seconds</p>
+              </div>`;
 
             // Run AI processing
             setTimeout(async () => {
                 scanOverlay.classList.remove('active');
-                const disease = await predictDisease(currentImageBase64, file.type);
+                const disease = await predictDisease(file);
                 renderResults(disease);
             }, 1500);
         };
@@ -210,19 +221,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ──── BACKEND API CALL ──────────────────────────
-    async function predictDisease(imageBase64, mimeType) {
+    // Accepts a File object; sends it as FormData to the Railway backend.
+    async function predictDisease(file) {
         updateModelStatusUI('loading');
         const startTime = performance.now();
 
         try {
-            const response = await fetch('/api/diagnose', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    image: imageBase64,
-                    mimeType: mimeType || 'image/jpeg'
-                })
-            });
+            // Build FormData — browser sets the correct multipart Content-Type automatically.
+            // Do NOT manually set Content-Type when using FormData.
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const controller = new AbortController();
+            // 60-second timeout — generous for mobile networks
+            const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+            let response;
+            try {
+                response = await fetch(`${API_BASE_URL}/api/diagnose`, {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+            } finally {
+                clearTimeout(timeoutId);
+            }
+
+            // Handle non-200 HTTP responses
+            if (!response.ok) {
+                let errorMsg = `Server error (${response.status})`;
+                try {
+                    const errBody = await response.json();
+                    if (errBody.error || errBody.message) {
+                        errorMsg = errBody.error || errBody.message;
+                    }
+                } catch (_) { /* ignore JSON parse failures on error bodies */ }
+                throw new Error(errorMsg);
+            }
 
             const result = await response.json();
 
@@ -261,17 +296,34 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('❌ Diagnosis error:', error);
             updateModelStatusUI('error');
 
+            // Distinguish network/fetch failures from server errors
+            const isNetworkError = !window.navigator.onLine ||
+                error.name === 'AbortError' ||
+                error.name === 'TypeError' ||
+                error.message.toLowerCase().includes('failed to fetch') ||
+                error.message.toLowerCase().includes('networkerror');
+
+            const userMessage = isNetworkError
+                ? 'AI service unavailable. Please check your connection and try again.'
+                : `Error: ${error.message}. Please try again.`;
+
+            const retryTip = isNetworkError
+                ? 'The AI backend may be offline or unreachable. Try refreshing the page.'
+                : 'If this persists, the AI service may be temporarily busy. Wait a moment and retry.';
+
             return {
-                disease: 'Analysis Error',
+                disease: isNetworkError ? 'AI Service Unavailable' : 'Analysis Error',
                 confidence: 0,
                 severity: 'Error',
                 severityClass: 'warning',
-                treatment: `Error: ${error.message}. Please try again.`,
-                prevention: 'If this persists, the AI service may be temporarily busy. Wait a moment and retry.',
+                treatment: userMessage,
+                prevention: retryTip,
                 rawClass: '',
                 isHealthy: false,
                 modelUsed: 'CropGuard AI Engine',
-                analysis: error.message
+                analysis: error.name === 'AbortError'
+                    ? 'Request timed out after 60 seconds.'
+                    : error.message
             };
         }
     }
